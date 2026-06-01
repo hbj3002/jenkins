@@ -56,16 +56,26 @@ pipeline {
     }
 
     post {
-        always {
-            echo "[*] Archiving test results..."
-            junit "${REPORT_DIR}/**/*.xml"
-            archiveArtifacts artifacts: "${REPORT_DIR}/**/*", allowEmptyArchive: true
-        }
-        failure {
-            echo "Build or test failed"
-        }
-        success {
-            echo "Build and test succeeded"
+            always {
+                echo "[*] Archiving test results..."
+                junit "${REPORT_DIR}/**/*.xml"
+                archiveArtifacts artifacts: "${REPORT_DIR}/**/*", allowEmptyArchive: true
+            }
+            failure {
+                echo "Build or test failed"
+            }
+            success {
+                // 👉 이 부분을 수정/추가합니다!
+                echo "Build and test succeeded"
+                sh """
+                    echo "=======================================" > build-result.txt
+                    echo "지속적 통합(CI) 빌드 및 테스트 결과 보고서" >> build-result.txt
+                    echo "상태: SUCCESS (성공)" >> build-result.txt
+                    echo "빌드 시간: \$(date)" >> build-result.txt
+                    echo "=======================================" >> build-result.txt
+                """
+                // 생성된 txt 파일을 젠킨스에 박제(저장)하는 명령어입니다.
+                archiveArtifacts artifacts: "build-result.txt", allowEmptyArchive: true
+            }
         }
     }
-}
