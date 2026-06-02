@@ -56,38 +56,39 @@ pipeline {
     }
 
     post {
-            always {
-                echo "[*] Archiving test results..."
-                junit "${REPORT_DIR}/**/*.xml"
-                archiveArtifacts artifacts: "${REPORT_DIR}/**/*", allowEmptyArchive: true
-            }
-            failure {
-                echo "Build or test failed"
-            }
-            success {
-                echo "Build and test succeeded"
-                sh """
-                    echo "=======================================" > build-result.txt
-                    echo "지속적 통합(CI) 빌드 및 테스트 결과 보고서" >> build-result.txt
-                    echo "상태: SUCCESS (성공)" >> build-result.txt
-                    echo "빌드 시간: \$(date)" >> build-result.txt
-                    echo "=======================================" >> build-result.txt
-                """
-                // 생성된 txt 파일을 젠킨스에 박제(저장)하는 명령어
-                archiveArtifacts artifacts: "build-result.txt", allowEmptyArchive: true
-
-                // 🚀 [추가] 네이버 SMTP를 이용한 이메일 자동 발송
-                emailext (
-                    subject: "✅ [Jenkins] 빌드 성공: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
-                    body: """
-                        <h3>🎉 Jenkins 빌드가 성공적으로 완료되었습니다.</h3>
-                        <p><b>프로젝트명:</b> ${env.JOB_NAME}</p>
-                        <p><b>빌드 번호:</b> #${env.BUILD_NUMBER}</p>
-                        <p><b>테스트 결과 및 로그 확인:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                        <hr>
-                        <p>본 메일은 Jenkins에서 자동 발송되었습니다.</p>
-                    """,
-                    to: 'hbj3000@naver.com' // 👈 여기에 알림을 받으실 네이버 메일 주소를 적어주세요!
-                )
-            }
+        always {
+            echo "[*] Archiving test results..."
+            junit "${REPORT_DIR}/**/*.xml"
+            archiveArtifacts artifacts: "${REPORT_DIR}/**/*", allowEmptyArchive: true
         }
+
+        failure {
+            echo "Build or test failed"
+        }
+
+        success {
+            echo "Build and test succeeded"
+            sh """
+                echo "=======================================" > build-result.txt
+                echo "지속적 통합(CI) 빌드 및 테스트 결과 보고서" >> build-result.txt
+                echo "상태: SUCCESS (성공)" >> build-result.txt
+                echo "빌드 시간: \$(date)" >> build-result.txt
+                echo "=======================================" >> build-result.txt
+            """
+            archiveArtifacts artifacts: "build-result.txt", allowEmptyArchive: true
+
+            emailext (
+                subject: "✅ [Jenkins] 빌드 성공: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
+                body: """
+                    <h3>🎉 Jenkins 빌드가 성공적으로 완료되었습니다.</h3>
+                    <p><b>프로젝트명:</b> ${env.JOB_NAME}</p>
+                    <p><b>빌드 번호:</b> #${env.BUILD_NUMBER}</p>
+                    <p><b>테스트 결과 및 로그 확인:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                    <hr>
+                    <p>본 메일은 Jenkins에서 자동 발송되었습니다.</p>
+                """,
+                to: 'your_email@naver.com' // 👈 본인 네이버 메일 주소로 꼭 변경하세요!
+            )
+        }
+    }
+} // 👈 이 맨 마지막 괄호가 누락되어 에러가 났었습니다.
