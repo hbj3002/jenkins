@@ -87,7 +87,7 @@ pipeline {
                     <hr>
                     <p>본 메일은 Jenkins에서 자동 발송되었습니다.</p>
                 """,
-                to: 'your_email@naver.com' // 👈 본인 네이버 메일 주소로 꼭 변경하세요!
+                to: 'hbj3000@naver.com' // 👈 본인 네이버 메일 주소로 꼭 변경하세요!
             )
         }
     }
