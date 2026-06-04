@@ -1,13 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        JUNIT_JAR_URL = 'https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.7.1/junit-platform-console-standalone-1.7.1.jar'
-        JUNIT_JAR_PATH = 'lib/junit.jar'
-        CLASS_DIR = 'classes'
-        REPORT_DIR = 'test-reports'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -17,40 +10,18 @@ pipeline {
 
         stage('Prepare') {
             steps {
-                sh """
-                    mkdir -p ${CLASS_DIR}
-                    mkdir -p ${REPORT_DIR}
-                    mkdir -p lib
-                    echo "[+] Downloading JUnit JAR..."
-                    curl -L -o ${JUNIT_JAR_PATH} ${JUNIT_JAR_URL}
-                """
+                echo "[+] Granting execute permission to gradlew..."
+                // 리눅스 환경에서 gradle 래퍼 실행 권한 부여
+                sh "chmod +x ./gradlew"
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                sh """
-                    echo "[+] Compiling source files..."
-                    find src -name "*.java" > sources.txt
-                    javac -encoding UTF-8 -d ./${CLASS_DIR} -cp ./${JUNIT_JAR_PATH} @sources.txt
-                """
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh """
-                    echo "[+] Running tests with JUnit..."
-                    java -jar ${JUNIT_JAR_PATH} \
-                    --class-path ${CLASS_DIR} \
-                    --scan-class-path \
-                    --details=tree \
-                    --details-theme=ascii \
-                    --reports-dir ${REPORT_DIR} \
-                    --config=junit.platform.output.capture.stdout=true \
-                    --config=junit.platform.reporting.open.xml.enabled=true \
-                    > ${REPORT_DIR}/test-output.txt
-                """
+                echo "[+] Compiling and Running Tests with Gradle..."
+                // 기존의 복잡한 javac, java -jar 명령 대신
+                // 스프링이 제공하는 gradlew 빌드 스크립트를 실행합니다.
+                sh "./gradlew clean build"
             }
         }
     }
@@ -58,16 +29,16 @@ pipeline {
     post {
         always {
             echo "[*] Archiving test results..."
-            junit "${REPORT_DIR}/**/*.xml"
-            archiveArtifacts artifacts: "${REPORT_DIR}/**/*", allowEmptyArchive: true
+            // 스프링 부트(Gradle)의 기본 테스트 리포트 경로로 변경
+            junit "build/test-results/test/**/*.xml"
         }
 
         failure {
-            echo "Build or test failed"
+            echo "❌ Build or test failed"
         }
 
         success {
-            echo "Build and test succeeded"
+            echo "✅ Build and test succeeded"
             sh """
                 echo "=======================================" > build-result.txt
                 echo "지속적 통합(CI) 빌드 및 테스트 결과 보고서" >> build-result.txt
@@ -87,8 +58,8 @@ pipeline {
                     <hr>
                     <p>본 메일은 Jenkins에서 자동 발송되었습니다.</p>
                 """,
-                to: 'your_email@naver.com' // 👈 본인 네이버 메일 주소로 꼭 변경하세요!
+                to: 'hbj3000@naver.com' // 👈 본인 네이버 메일 주소로 변경!
             )
         }
     }
-} // 👈 이 맨 마지막 괄호가 누락되어 에러가 났었습니다.
+}
