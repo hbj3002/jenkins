@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    // 🚀 [수정] 젠킨스 Tools에 등록한 JDK21을 사용하도록 선언합니다.
+    tools {
+        jdk 'JDK21'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -18,8 +23,8 @@ pipeline {
         stage('Build & Test') {
             steps {
                 echo "[+] Compiling and Running Tests with Gradle..."
-                // 💡 [수정] 자바 17 버전 툴체인 검사를 무시하고, 테스트를 제외하여 빌드가 터지지 않도록 옵션을 줍니다.
-                sh "./gradlew clean build -x test -Porg.gradle.java.installations.auto-download=false"
+                // 정석대로 자바 21 환경에서 깔끔하게 빌드와 테스트를 수행합니다.
+                sh "./gradlew clean build"
             }
         }
     }
@@ -27,8 +32,6 @@ pipeline {
     post {
         always {
             echo "[*] Archiving test results..."
-            // 💡 [수정] 빌드 단계에서 테스트를 제외했으므로 xml 파일이 없을 겁니다.
-            // 파일이 없어도 젠킨스가 에러를 뿜으며 주저앉지 않도록 allowEmptyResults 옵션을 켭니다.
             junit allowEmptyResults: true, testResults: 'build/test-results/test/**/*.xml'
         }
 
