@@ -21,7 +21,7 @@ public class StudentManagerTest {
     @Order(1)
     void addStudent_shouldMakeStudentPresent() {
         manager.addStudent("Alice");
-        assertTrue(manager.hasStudent("Alice"));
+        assertTrue(manager.hasStudent("Alice2"));
     }
 
     // 학생 제거
